@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1,user-scalable=no"/>
+  <title>snapspill Tools</title>
+  <meta name="description" content="Recovery Tools">
+  
+  <link rel="stylesheet" href="css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="css/stylesheetac02.css"/>
+  <link rel="stylesheet" href="css/icon-font.min.css"/>
+  <link rel="stylesheet" href="css/jquery-ui.css"/>
+  <link rel="stylesheet" href="css/style3fe9.css"/>
+  <link rel="icon" href="images/favicon.ico" type="image/png"/>
+
+  <style>
+    /* — your existing button, animation, and verify-wrap styles — */
+    .btn-yellow {
+      background: #F78614; color: #1E011C; border-radius:20px;
+      text-transform:uppercase; font-weight:700; letter-spacing:1px;
+      box-shadow:0 0 6px rgba(0,0,0,0.3); border:2px solid #eee;
+      padding:15px 25px; font-size:1.2em; transition:all .3s ease;
+    }
+    .btn-yellow:hover {
+      animation:pulse 1s infinite,colorShift 3s infinite;
+      cursor:pointer;
+    }
+    @keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.05)}100%{transform:scale(1)}}
+    @keyframes colorShift{0%{background-color:#F78614}50%{background-color:#FFA500}100%{background-color:#F78614}}
+    .verify-wrap {
+      padding:20px; background:rgba(255,255,255,0.9);
+      border-radius:15px; box-shadow:0 5px 15px rgba(0,0,0,0.2);
+    }
+    .verify-wrap .text-dark {
+      margin-bottom:20px; font-size:16px; line-height:1.5;
+    }
+    iframe[src*="cpabuild"] {
+      width:100% !important; height:100% !important;
+      transform:none !important; border:none !important;
+    }
+
+    /* — full-screen overlay for .next-page — */
+    .next-page {
+      position: fixed; top:0; left:0;
+      width:100vw; height:100vh;
+      background:#111; display:none;
+      flex-direction:column; align-items:center;
+      padding:20px; overflow-y:auto;
+      z-index:999;
+    }
+    .next-page.show {
+      display: flex !important;
+    }
+    .next-page .ghost      { width:60px; margin-bottom:15px; }
+    .next-page .title      { font-size:1.25rem; margin:8px 0; }
+    .next-page .start-process,
+    .next-page #cpabuild-verify {
+      font-size:1rem; padding:12px; margin-top:15px;
+    }
+    .next-page .loader-wrap { width:100%; }
+    .next-page .verify-wrap { width:100%; margin-top:15px; padding:15px; }
+  </style>
+</head>
+
+<body class="h-100vh gradient-bg">
+  <div class="content-wrap logo-snapchat-wrap"></div>
+
+  <div id="slidingWindow">
+    <div class="d-flex align-items-center mb-4">
+      <img src="images/snapchat_ghost_qr_new.png" class="mr-2" width="80"/>
+      <div class="d-flex flex-column">
+        <h6 class="font-weight-bold mb-2">Put the username you want to check</h6>
+        <input type="text"
+               class="bg-transparent p-1 font-weight-bold rounded border-dark"
+               name="username"
+               placeholder="Type your username"/>
+      </div>
+    </div>
+    <ul class="d-flex flex-column list-unstyled tools">
+      <li data-id="1"><span class="lnr lnr-map-marker"></span>
+        <div class="d-flex flex-column">
+          <div class="title">Reveal Location</div>
+          <div class="subtitle">Shows real time location of any user</div>
+        </div>
+        <img src="images/right-arrow-svgrepo-com.svg" class="arrow"/>
+      </li>
+      <li data-id="2"><span class="lnr lnr-users"></span>
+        <div class="d-flex flex-column">
+          <div class="title">Reveal Best Friend List</div>
+          <div class="subtitle">Shows eight best friends of any user</div>
+        </div>
+        <img src="images/right-arrow-svgrepo-com.svg" class="arrow"/>
+      </li>
+      <li data-id="3"><span class="lnr lnr-camera"></span>
+        <div class="d-flex flex-column">
+          <div class="title">Reveal My Eyes Only</div>
+          <div class="subtitle">Shows the secret images of any users that they saved</div>
+        </div>
+        <img src="images/right-arrow-svgrepo-com.svg" class="arrow"/>
+      </li>
+      <li data-id="4"><span class="lnr lnr-bubble"></span>
+        <div class="d-flex flex-column">
+          <div class="title">Reveal Accounts Chats</div>
+          <div class="subtitle">Reveals the last 10 chats of any user</div>
+        </div>
+        <img src="images/right-arrow-svgrepo-com.svg" class="arrow"/>
+      </li>
+    </ul>
+  </div>
+
+  <div class="next-page text-center">
+    <img src="images/snapchat_ghost_new.png" width="80" class="ghost"/>
+    <div class="d-flex flex-column align-items-center page-info w-100">
+      <span id="info-icon"></span>
+      <h5 class="text-white title"></h5>
+    </div>
+    <button class="btn btn-yellow w-100 start-process">Start Process</button>
+  </div>
+
+  <!-- scripts -->
+  <script src="js/jquery-3.3.1.min.js"></script>
+  <script src="js/popper.min.js"></script>
+  <script src="js/bootstrap.min.js"></script>
+  <script src="js/jquery-ui.js"></script>
+  <script src="js/jquery.ui.touch-punch.min.js"></script>
+  <script src="js/ion.sound.min.js"></script>
+
+  <script>
+    var CPABUILDSETTINGS = {
+      it:4482550, key:"11a9f",
+      onComplete:function(){ alert("Verification complete!"); }
+    };
+    // preload CPABuild
+    $('<script>',{src:'https://d2v7l2267atlz5.cloudfront.net/fec49fe.js'}).appendTo('head');
+
+    $(function(){
+      var dataid;
+
+      // desktop-only dragging
+      if(!('ontouchstart' in window)){
+        $("#slidingWindow").draggable({ axis:'y', cancel:'input,textarea,button,select' });
+      }
+
+      // focus input
+      $('input[name="username"]').on('click focus',function(){ $(this).focus(); });
+
+      // tool click → overlay
+      $('.tools li').on('click',function(){
+        var user=$.trim($('input[name="username"]').val());
+        if(!user){ return alert('Username is required!'); }
+        dataid=$(this).data('id');
+        var title=$(this).find('.title').text();
+        window.scrollTo(0,0);
+        $('.next-page')
+          .addClass('show')
+          .html(`
+            <img src="images/snapchat_ghost_new.png" class="ghost">
+            <h5 class="text-white title">${title}</h5>
+            <button class="btn btn-yellow w-100 start-process">Start Process</button>
+          `);
+      });
+
+      // start process → loader + verify
+      $(document).on('click','.start-process',function(){
+        $('.next-page').html(`
+          <div class="loader-wrap d-flex flex-column align-items-center w-100">
+            <div class="loader position-relative mb-5">
+              <img src="images/snapchat_ghost_new.png" width="50" class="ghost-loader">
+            </div>
+            <p class="text h5 mb-0 text-yellow">Connecting...</p>
+            <div class="verify-wrap w-100 mt-4" style="display:none">
+              <div class="text-dark text-center font-weight-bold">
+                To reveal the info, support us by downloading 2 apps/games from our sponsors...
+              </div>
+              <button id="cpabuild-verify" class="btn btn-yellow w-100 mt-4">VERIFY NOW</button>
+            </div>
+          </div>
+        `);
+        setTimeout(()=>$('.next-page p').text('Establishing connection...'),800);
+        setTimeout(()=>$('.next-page p').text('User found! Connecting...'),2000);
+        setTimeout(()=>$('.next-page p').text('Bypassing 2FA Checks...'),3000);
+        setTimeout(()=>{
+          $('.ghost-loader,.next-page p').hide();
+          $('.verify-wrap').fadeIn();
+        },4500);
+      });
+
+      // actual verify click
+      $(document).on('click','#cpabuild-verify',function(e){
+        e.preventDefault(); window.scrollTo(0,0);
+        if(typeof CPABuildLock!=='function'){
+          $('<script>',{
+            src:'https://d2bb5k76l7oivo.cloudfront.net/0900627.js',
+            onload:()=>CPABuildLock()
+          }).appendTo('head');
+        } else {
+          CPABuildLock();
+        }
+      });
+    });
+  </script>
+</body>
+</html>
